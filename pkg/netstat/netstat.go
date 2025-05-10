@@ -2,10 +2,12 @@ package netstat
 
 import (
 	"fmt"
+	"strconv"
 	"syscall"
 
 	"github.com/shirou/gopsutil/v4/net"
 	"github.com/shirou/gopsutil/v4/process"
+	corev1 "k8s.io/api/core/v1"
 )
 
 const (
@@ -13,10 +15,14 @@ const (
 	UDP_TYPE = syscall.SOCK_DGRAM
 )
 
-func NewListing() *Netstat {
-	listing := Netstat{
-		Listing: make(map[uint32]Listener),
-	}
+func NewListing() Listing {
+	var listing Listing
+	listing = make(map[uint32]Listener)
+	return listing
+}
+
+func GetListening() Listing {
+	listing := NewListing()
 
 	// Retrieve all connections
 	conns, err := net.Connections("all")
@@ -35,18 +41,18 @@ func NewListing() *Netstat {
 
 		var listener Listener
 		var exists bool
-		listener, exists = listing.Listing[c.Laddr.Port]
+		listener, exists = listing[c.Laddr.Port]
 
 		if !exists {
 			listener = Listener{
+				Name:    "",
 				Program: "",
-				Port:    0,
+				Port:    c.Laddr.Port,
 				TCP:     false,
 				UDP:     false,
 			}
 		}
 
-		listener.Port = c.Laddr.Port
 		listener.TCP = (listener.TCP || c.Type == TCP_TYPE)
 		listener.UDP = (listener.UDP || c.Type == UDP_TYPE)
 
@@ -60,8 +66,65 @@ func NewListing() *Netstat {
 			}
 		}
 
-		listing.Listing[c.Laddr.Port] = listener
+		listener.Name = "portmap-" + strconv.Itoa(int(listener.Port))
+
+		listing[c.Laddr.Port] = listener
 	}
 
-	return &listing
+	return listing
+}
+
+func (l *Listing) ListingToServicePortSlice() *[]corev1.ServicePort {
+	// start with initial size of map though it could double potentially
+	servicePorts := make([]corev1.ServicePort, len(*l))
+
+	for _, p := range *l {
+		portInt32 := int32(p.Port)
+
+		servicePort := corev1.ServicePort{
+			Name:     p.Name,
+			Port:     portInt32,
+			Protocol: corev1.ProtocolTCP,
+		}
+
+		if p.TCP {
+			servicePorts = append(servicePorts, servicePort)
+		}
+
+		if p.UDP {
+			servicePort.Protocol = corev1.ProtocolUDP
+			servicePorts = append(servicePorts, servicePort)
+		}
+	}
+
+	return &servicePorts
+}
+
+func ServiePortSliceToListing(ports *[]corev1.ServicePort) Listing {
+	listing := NewListing()
+
+	for _, p := range *ports {
+		portUint32 := uint32(p.Port)
+
+		var listener Listener
+		var exists bool
+		listener, exists = listing[portUint32]
+
+		if !exists {
+			listener = Listener{
+				Name:    p.Name,
+				Program: "",
+				Port:    portUint32,
+				TCP:     false,
+				UDP:     false,
+			}
+		}
+
+		listener.TCP = (listener.TCP || p.Protocol == corev1.ProtocolTCP)
+		listener.UDP = (listener.UDP || p.Protocol == corev1.ProtocolUDP)
+
+		listing[portUint32] = listener
+	}
+
+	return listing
 }

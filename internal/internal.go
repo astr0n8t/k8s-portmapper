@@ -15,9 +15,9 @@ func Run() {
 	config := Config()
 	log.Printf("Loaded config file %v", config.ConfigFileUsed())
 
-	newListing := netstat.NewListing()
+	newListing := netstat.GetListening()
 
-	for _, l := range newListing.Listing {
+	for _, l := range newListing {
 		fmt.Printf("Program: %v Port: %v UDP: %v TCP: %v\n", l.Program, l.Port, l.UDP, l.TCP)
 	}
 

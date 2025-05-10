@@ -5,9 +5,11 @@ import (
 	"testing"
 )
 
-func TestSetAndGetIndex(t *testing.T) {
+func TestNewNetstat(t *testing.T) {
 	newListing := NewListing()
-	for _, l := range newListing.Listing {
-		fmt.Printf("Program: %v Port: %v UDP: %v TCP: %v\n", l.Program, l.Port, l.UDP, l.TCP)
+	newListing[0] = Listener{}
+
+	for _, l := range GetListening() {
+		fmt.Printf("Name: %v Program: %v Port: %v UDP: %v TCP: %v\n", l.Name, l.Program, l.Port, l.UDP, l.TCP)
 	}
 }
