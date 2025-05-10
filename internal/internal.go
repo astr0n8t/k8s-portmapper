@@ -1,9 +1,12 @@
 package internal
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
+
+	"github.com/astr0n8t/k8s-portmapper/pkg/netstat"
 )
 
 // Runs k8s-portmapper
@@ -12,7 +15,11 @@ func Run() {
 	config := Config()
 	log.Printf("Loaded config file %v", config.ConfigFileUsed())
 
-	// Insert main app code here
+	newListing := netstat.NewListing()
+
+	for _, l := range newListing.Listing {
+		fmt.Printf("Program: %v Port: %v UDP: %v TCP: %v\n", l.Program, l.Port, l.UDP, l.TCP)
+	}
 
 	// Don't exit until we receive stop from the OS
 	stop := make(chan os.Signal, 1)
