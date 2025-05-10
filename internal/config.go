@@ -33,11 +33,11 @@ var defaultConfig *viper.Viper
 
 // Config returns a default config providers
 func Config() ConfigStore {
-	return readViperConfig("UPPER_APP_NAME")
+	return readViperConfig("K8S_PORTMAPPER")
 }
 
 func DevConfig() ConfigStore {
-	return readViperDevConfig("UPPER_APP_NAME")
+	return readViperDevConfig("K8S_PORTMAPPER")
 }
 
 // LoadConfigProvider returns a configured viper instance
@@ -61,7 +61,7 @@ func readViperConfig(appName string) *viper.Viper {
 	v.SetConfigType("yaml")
 
 	v.AddConfigPath(".")
-	v.AddConfigPath("/etc/APP_NAME/")
+	v.AddConfigPath("/etc/k8s-portmapper/")
 
 	v.ReadInConfig()
 

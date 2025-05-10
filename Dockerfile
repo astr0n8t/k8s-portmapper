@@ -2,8 +2,8 @@
 ARG BUILDPLATFORM
 FROM --platform=${BUILDPLATFORM} golang:1.24.3 AS build-stage
 
-LABEL app="APP_NAME"
-LABEL REPO="https://github.com/astr0n8t/APP_NAME"
+LABEL app="k8s-portmapper"
+LABEL REPO="https://github.com/astr0n8t/k8s-portmapper"
 
 WORKDIR /app
 
@@ -20,15 +20,15 @@ COPY version/ ./version/
 ARG TARGETOS
 ARG TARGETARCH
 
-RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -o /APP_NAME
+RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -o /k8s-portmapper
 
 # Deploy the application binary into a lean image
 FROM gcr.io/distroless/static-debian11 AS build-release-stage
 
 WORKDIR /
 
-COPY --from=build-stage /APP_NAME /APP_NAME
+COPY --from=build-stage /k8s-portmapper /k8s-portmapper
 
 USER nonroot:nonroot
 
-ENTRYPOINT ["/APP_NAME"]
+ENTRYPOINT ["/k8s-portmapper"]

@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/astr0n8t/APP_NAME/version"
+	"github.com/astr0n8t/k8s-portmapper/version"
 	"github.com/spf13/cobra"
 )
 

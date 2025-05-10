@@ -6,7 +6,7 @@ import (
 	"os/signal"
 )
 
-// Runs APP_NAME
+// Runs k8s-portmapper
 func Run() {
 	// Make sure we can load config
 	config := Config()
