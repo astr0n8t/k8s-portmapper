@@ -20,19 +20,22 @@ import (
 // Runs k8s-portmapper
 func Run() {
 	portMapper := PortMapper{
-		Config:  Config(),
-		DevMode: true,
+		Config: Config(),
+		Debug:  false,
 	}
 	log.Printf("Loaded config file %v", portMapper.Config.ConfigFileUsed())
 
 	log.Println("Loading k8s config")
-	if portMapper.Config.GetString("mode") == "production" {
-		portMapper.DevMode = false
-		portMapper.loadInternalk8sConfig()
-		log.Println("Loaded internal k8s config")
-	} else {
+	if portMapper.Config.GetString("mode") == "development" {
+		portMapper.Debug = false
 		portMapper.loadExternalk8sConfig()
 		log.Println("Loaded external k8s config")
+	} else {
+		portMapper.loadInternalk8sConfig()
+		log.Println("Loaded internal k8s config")
+		if portMapper.Config.GetString("mode") == "debug" {
+			portMapper.Debug = true
+		}
 	}
 
 	// Start main event loop
@@ -45,7 +48,7 @@ func Run() {
 }
 
 func (p *PortMapper) DebugLog(message any) {
-	if p.DevMode {
+	if p.Debug {
 		log.Printf("%v\n", message)
 	}
 }

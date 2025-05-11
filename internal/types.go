@@ -10,5 +10,5 @@ type PortMapper struct {
 	k8s             k8s.K8S
 	NonTrackedPorts *[]corev1.ServicePort
 	ServiceState    *[]corev1.ServicePort
-	DevMode         bool
+	Debug           bool
 }
