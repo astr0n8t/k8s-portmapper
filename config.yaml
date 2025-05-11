@@ -1,2 +1,12 @@
 ---
-# Place the config of your app here
+# name of the k8s service to update
+service_name: ""
+# namespace of the k8s service to update
+service_namespace: ""
+# name of the program to open ports for
+program_name: ""
+# can be contains, exact, or disabled
+# disabled matches on everything that listens
+program_name_match: "disabled"
+# interval to update service in seconds
+interval: "5"

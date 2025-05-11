@@ -2,7 +2,9 @@ package netstat
 
 import (
 	"fmt"
+	"log"
 	"strconv"
+	"strings"
 	"syscall"
 
 	"github.com/shirou/gopsutil/v4/net"
@@ -21,14 +23,13 @@ func NewListing() Listing {
 	return listing
 }
 
-func GetListening() Listing {
+func GetListening() (Listing, error) {
 	listing := NewListing()
 
 	// Retrieve all connections
 	conns, err := net.Connections("all")
 	if err != nil {
-		fmt.Printf("Error retrieving connections: %v\n", err)
-		return nil
+		return nil, fmt.Errorf("could not retrieve connections: %v\n", err)
 	}
 
 	// Process connections
@@ -61,6 +62,8 @@ func GetListening() Listing {
 				if p, err := process.NewProcess(c.Pid); err == nil {
 					if name, err := p.Name(); err == nil {
 						listener.Program = name
+					} else {
+						log.Printf("issue retrieving listener name: %v\n", err)
 					}
 				}
 			}
@@ -71,15 +74,27 @@ func GetListening() Listing {
 		listing[c.Laddr.Port] = listener
 	}
 
-	return listing
+	return listing, nil
+}
+
+func (l *Listing) FilterListing(program, method string) {
+	for p, e := range *l {
+		if method == "exact" && e.Program != program {
+			delete(*l, p)
+		} else if method == "contains" && !strings.Contains(e.Program, program) {
+			delete(*l, p)
+		}
+	}
 }
 
 func (l *Listing) ListingToServicePortSlice() *[]corev1.ServicePort {
 	// start with initial size of map though it could double potentially
-	servicePorts := make([]corev1.ServicePort, len(*l))
+	servicePorts := make([]corev1.ServicePort, 0)
 
 	for _, p := range *l {
 		portInt32 := int32(p.Port)
+
+		tracked := strings.HasPrefix(p.Name, "portmap-")
 
 		servicePort := corev1.ServicePort{
 			Name:     p.Name,
@@ -88,10 +103,16 @@ func (l *Listing) ListingToServicePortSlice() *[]corev1.ServicePort {
 		}
 
 		if p.TCP {
+			if tracked {
+				servicePort.Name = "portmap-" + strconv.Itoa(int(servicePort.Port)) + "-t"
+			}
 			servicePorts = append(servicePorts, servicePort)
 		}
 
 		if p.UDP {
+			if tracked {
+				servicePort.Name = "portmap-" + strconv.Itoa(int(servicePort.Port)) + "-u"
+			}
 			servicePort.Protocol = corev1.ProtocolUDP
 			servicePorts = append(servicePorts, servicePort)
 		}
@@ -100,7 +121,7 @@ func (l *Listing) ListingToServicePortSlice() *[]corev1.ServicePort {
 	return &servicePorts
 }
 
-func ServiePortSliceToListing(ports *[]corev1.ServicePort) Listing {
+func ServicePortSliceToListing(ports *[]corev1.ServicePort) Listing {
 	listing := NewListing()
 
 	for _, p := range *ports {
