@@ -36,7 +36,7 @@ func GetListening() (Listing, error) {
 	for _, c := range conns {
 		// only care about listening connections
 		if (c.Type == TCP_TYPE && c.Status != "LISTEN") ||
-			(c.Type == UDP_TYPE && (c.Raddr.IP != "" || c.Raddr.Port != 0)) {
+			(c.Type == UDP_TYPE && (c.Raddr.IP != "" && c.Raddr.Port != 0)) {
 			continue
 		}
 
