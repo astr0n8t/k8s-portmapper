@@ -1,11 +1,36 @@
-# APP_NAME
+# k8s-portmapper
 
-Run these commands to get started:
+Auto-add new listening ports in a container to a k8s service.
+
+See config.yaml for options.
+
+## k8s Pod Privileges
+
+Make sure to add a service account to be able to get and edit the service:
 ```
-find . -type f -exec sed -i 's/APP_NAME/actual_app_name/g' {} +
-go mod init github.com/astr0n8t/actual_app_name
-go get github.com/spf13/cobra
-go get github.com/spf13/viper 
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: default
+  name: service-patcher
+rules:
+- apiGroups: [""]
+  resources: ["services"]
+  verbs: ["get", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  namespace: default
+  name: service-patcher-binding
+subjects:
+- kind: ServiceAccount
+  name: default # Replace with your service account
+  namespace: default
+roleRef:
+  kind: Role
+  name: service-patcher
+  apiGroup: rbac.authorization.k8s.io
 ```
 
-See the config.yaml file for an example configuration
+And then apply it to your pod, as well as give the pod `shareProcessNamespace: true` if wanting to filter on a specific program.

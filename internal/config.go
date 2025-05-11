@@ -1,6 +1,9 @@
 package internal
 
 import (
+	"log"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -33,11 +36,18 @@ var defaultConfig *viper.Viper
 
 // Config returns a default config providers
 func Config() ConfigStore {
-	return readViperConfig("UPPER_APP_NAME")
-}
+	ex, err := os.Executable()
+	if err != nil {
+		log.Fatalf("cannot determine run status: %v", err)
+	}
 
-func DevConfig() ConfigStore {
-	return readViperDevConfig("UPPER_APP_NAME")
+	// Check if we're running in a dev build
+	dir := filepath.Dir(ex)
+	if strings.Contains(dir, "go-build") {
+		return readViperDevConfig("K8S_PORTMAPPER")
+	}
+
+	return readViperConfig("K8S_PORTMAPPER")
 }
 
 // LoadConfigProvider returns a configured viper instance
@@ -46,10 +56,18 @@ func LoadConfigProvider(appName string) ConfigStore {
 }
 
 func setDefaults(v *viper.Viper) {
-	v.SetDefault("setting", "value")
+	v.SetDefault("service_name", "")
+	v.SetDefault("service_namespace", "")
+	v.SetDefault("program_name_match", "disabled")
+	v.SetDefault("program_name", "")
+	v.SetDefault("interval", "5")
+	v.SetDefault("mode", "production")
 }
 
 func setDevOverideDefaults(v *viper.Viper) {
+	v.SetDefault("mode", "development")
+	v.SetDefault("service_name", "test-service")
+	v.SetDefault("service_namespace", "testing")
 }
 
 func readViperConfig(appName string) *viper.Viper {
@@ -61,7 +79,7 @@ func readViperConfig(appName string) *viper.Viper {
 	v.SetConfigType("yaml")
 
 	v.AddConfigPath(".")
-	v.AddConfigPath("/etc/APP_NAME/")
+	v.AddConfigPath("/etc/k8s-portmapper/")
 
 	v.ReadInConfig()
 
