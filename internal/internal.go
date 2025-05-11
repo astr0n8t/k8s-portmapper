@@ -6,7 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
-	"reflect"
+	"sort"
 	"strings"
 	"time"
 
@@ -44,9 +44,9 @@ func Run() {
 	<-stop
 }
 
-func (p *PortMapper) DebugLog(message string) {
+func (p *PortMapper) DebugLog(message any) {
 	if p.DevMode {
-		log.Printf(message)
+		log.Printf("%v\n", message)
 	}
 }
 
@@ -90,20 +90,51 @@ func (p *PortMapper) startLoop() {
 		newPorts := p.generateNewServiceState(&listeningPorts)
 
 		p.DebugLog("Checking to see if port list changed")
-		changed := !reflect.DeepEqual(*newPorts, *p.ServiceState)
+		changed := !checkServicePortSliceEquality(newPorts, p.ServiceState)
 
 		if changed {
-			log.Printf("%v\n", newPorts)
+			p.DebugLog(newPorts)
+			p.DebugLog(p.ServiceState)
 			p.DebugLog("Port list changed, trying to update k8s service")
 			updateServiceErr := p.k8s.SetServicePorts(namespace, serviceName, newPorts)
 			if updateServiceErr != nil {
 				log.Fatalf("could not update service: %v\n", updateServiceErr)
 			}
 			p.DebugLog("Updated k8s service")
+		} else {
+			p.DebugLog("No change in ports")
 		}
 
 		time.Sleep(time.Duration(interval) * time.Second)
 	}
+}
+
+func checkServicePortSliceEquality(a *[]corev1.ServicePort, b *[]corev1.ServicePort) bool {
+	if len(*a) != len(*b) {
+		return false
+	}
+	sortServicePortSliceByPort(*a)
+	sortServicePortSliceByPort(*b)
+	sortServicePortSliceByProtocol(*a)
+	sortServicePortSliceByProtocol(*b)
+	for i := range *a {
+		if (*a)[i].Port != (*b)[i].Port || (*a)[i].Protocol != (*b)[i].Protocol {
+			return false
+		}
+	}
+	return true
+}
+
+func sortServicePortSliceByPort(ports []corev1.ServicePort) {
+	sort.Slice(ports, func(i, j int) bool {
+		return ports[i].Port < ports[j].Port
+	})
+}
+
+func sortServicePortSliceByProtocol(ports []corev1.ServicePort) {
+	sort.Slice(ports, func(i, j int) bool {
+		return ports[i].Protocol < ports[j].Protocol
+	})
 }
 
 func (p *PortMapper) updateState(namespace, serviceName string) error {
