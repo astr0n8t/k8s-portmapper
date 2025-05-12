@@ -59,7 +59,7 @@ func (p *PortMapper) startLoop() {
 	namespace := p.Config.GetString("service_namespace")
 	programName := p.Config.GetString("program_name")
 	programNameMatch := p.Config.GetString("program_name_match")
-	interval := p.Config.GetInt("interval")
+	interval := p.Config.GetFloat64("interval")
 
 	if serviceName == "" || namespace == "" {
 		log.Fatalf("service_name and service_namespace are required to be set")
@@ -80,6 +80,7 @@ func (p *PortMapper) startLoop() {
 		if getNetstatErr != nil {
 			log.Fatalf("could not get netstat: %v\n", getNetstatErr)
 		}
+		p.DebugLog(listeningPorts)
 		p.DebugLog("Getting service state from k8s")
 		updateStateErr := p.updateState(namespace, serviceName)
 		if updateStateErr != nil {
@@ -173,9 +174,9 @@ func (p *PortMapper) generateNewServiceState(currentListing *netstat.Listing) *[
 			// this shouldn't happen and these ports should be mapped manually
 			// or else the port name will be a duplicate and cause errors
 			if !listener.TCP && entry.TCP {
-				log.Printf("filter allowed port %v on TCP which is mapped manually on UDP but not TCP; will not map this port to prevent errors.  Please map it manually if required")
+				log.Printf("filter allowed port %v on TCP which is mapped manually on UDP but not TCP; will not map this port to prevent errors.  Please map it manually if required", port)
 			} else if !listener.UDP && entry.UDP {
-				log.Printf("filter allowed port %v on UDP which is mapped manually on TCP but not UDP; will not map this port to prevent errors.  Please map it manually if required")
+				log.Printf("filter allowed port %v on UDP which is mapped manually on TCP but not UDP; will not map this port to prevent errors.  Please map it manually if required", port)
 			}
 			delete(*currentListing, port)
 		}
