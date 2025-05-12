@@ -60,7 +60,7 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("service_namespace", "")
 	v.SetDefault("program_name_match", "disabled")
 	v.SetDefault("program_name", "")
-	v.SetDefault("interval", "5")
+	v.SetDefault("interval", "5.0")
 	v.SetDefault("mode", "production")
 }
 
