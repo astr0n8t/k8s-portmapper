@@ -5,7 +5,7 @@ go 1.24.0
 toolchain go1.24.4
 
 require (
-	github.com/shirou/gopsutil/v4 v4.25.5
+	github.com/shirou/gopsutil/v4 v4.25.6
 	github.com/spf13/cobra v1.9.1
 	github.com/spf13/viper v1.20.1
 	k8s.io/api v0.33.2
