@@ -2,7 +2,7 @@ module github.com/astr0n8t/k8s-portmapper
 
 go 1.24.0
 
-toolchain go1.25.3
+toolchain go1.25.4
 
 require (
 	github.com/shirou/gopsutil/v4 v4.25.10
