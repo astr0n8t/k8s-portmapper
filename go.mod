@@ -5,7 +5,7 @@ go 1.25.0
 toolchain go1.26.0
 
 require (
-	github.com/shirou/gopsutil/v4 v4.26.1
+	github.com/shirou/gopsutil/v4 v4.26.2
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/viper v1.21.0
 	k8s.io/api v0.35.2
@@ -15,7 +15,7 @@ require (
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/ebitengine/purego v0.9.1 // indirect
+	github.com/ebitengine/purego v0.10.0 // indirect
 	github.com/emicklei/go-restful/v3 v3.12.2 // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
 	github.com/fxamacker/cbor/v2 v2.9.0 // indirect
@@ -57,7 +57,7 @@ require (
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/net v0.47.0 // indirect
 	golang.org/x/oauth2 v0.30.0 // indirect
-	golang.org/x/sys v0.40.0 // indirect
+	golang.org/x/sys v0.41.0 // indirect
 	golang.org/x/term v0.37.0 // indirect
 	golang.org/x/text v0.31.0 // indirect
 	golang.org/x/time v0.9.0 // indirect
